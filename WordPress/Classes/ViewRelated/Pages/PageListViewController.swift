@@ -54,6 +54,10 @@ class PageListViewController: AbstractPostListViewController, UIViewControllerRe
     lazy var homepageSettingsService = {
         return HomepageSettingsService(blog: blog, coreDataStack: ContextManager.shared)
     }()
+    
+    lazy var editorSettingsService: BlockEditorSettingsService? = {
+        BlockEditorSettingsService(blog: blog, coreDataStack: ContextManager.shared)
+    }()
 
     private lazy var createButtonCoordinator: CreateButtonCoordinator = {
         let action = PageAction(handler: { [weak self] in
@@ -152,7 +156,12 @@ class PageListViewController: AbstractPostListViewController, UIViewControllerRe
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-
+        
+        editorSettingsService?.fetchSettings({ [weak self] result in
+            guard let `self` = self else { return }
+            print("PAGE VIEW has FSE Support: ", self.blog.blockEditorSettings?.isFSETheme)
+        })
+        
         _tableViewHandler.status = filterSettings.currentPostListFilter().filterType
         _tableViewHandler.refreshTableView()
     }

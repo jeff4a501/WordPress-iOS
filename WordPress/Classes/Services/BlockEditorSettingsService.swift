@@ -62,7 +62,8 @@ private extension BlockEditorSettingsService {
             case .success(let editorTheme):
                 self.blog.managedObjectContext?.perform {
                     let originalChecksum = self.blog.blockEditorSettings?.checksum ?? ""
-                    self.track(isBlockEditorSettings: false, isFSE: false)
+                    self.blog.blockEditorSettings?.isFSETheme = ((editorTheme?.themeSupport!.blockTemplates) != nil)
+                    self.track(isBlockEditorSettings: false, isFSE: self.blog.blockEditorSettings?.isFSETheme ?? false)
                     self.updateEditorThemeCache(originalChecksum: originalChecksum, editorTheme: editorTheme, completion: completion)
                 }
             case .failure(let err):
