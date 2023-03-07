@@ -100,19 +100,13 @@ import WordPressKit
                     try context.obtainPermanentIDs(for: [pubConn])
                     return pubConn.objectID
                 }, completion: { result in
-                    let transformed = result.flatMap { objectID in
+                    result.flatMap { objectID in
                         Result {
                             let object = try self.coreDataStack.mainContext.existingObject(with: objectID)
                             return object as! PublicizeConnection
                         }
                     }
-                    switch transformed {
-                    case let .success(object):
-                        success?(object)
-                    case let .failure(error):
-                        DDLogError("Error creating publicize connection from remote: \(error)")
-                        failure?(error as NSError)
-                    }
+                    .forwardTo(success: success, failure: failure)
                 }, on: .main)
             },
             failure: { (error: NSError?) in
@@ -174,13 +168,7 @@ import WordPressKit
                         self.coreDataStack.performAndSave({ context in
                             try self.createOrReplacePublicizeConnectionForBlogWithObjectID(blogObjectID, remoteConnection: remoteConnection, in: context)
                         }, completion: { result in
-                            switch result {
-                            case .success:
-                                success?()
-                            case let .failure(error):
-                                DDLogError("Error creating publicize connection from remote: \(error)")
-                                failure?(error as NSError)
-                            }
+                            result.forwardTo(success: success, failure: failure)
                         }, on: .main)
                     },
                     failure: { (error: NSError?) in
@@ -230,13 +218,7 @@ import WordPressKit
                     self.coreDataStack.performAndSave({ context in
                         try self.createOrReplacePublicizeConnectionForBlogWithObjectID(blogObjectID, remoteConnection: remoteConnection, in: context)
                     }, completion: { result in
-                        switch result {
-                        case .success:
-                            success?()
-                        case let .failure(error):
-                            DDLogError("Error creating publicize connection from remote: \(error)")
-                            failure?(error as NSError)
-                        }
+                        result.forwardTo(success: success, failure: failure)
                     }, on: .main)
                 },
                 failure: failure)
@@ -514,5 +496,61 @@ import WordPressKit
         }
 
         return SharingServiceRemote(wordPressComRestApi: api)
+    }
+}
+
+extension Swift.Result {
+
+    func forwardTo(success: () -> Void, failure: (Failure) -> Void) {
+        switch self {
+        case .success: success()
+        case .failure(let error): failure(error)
+        }
+    }
+
+    func forwardTo(success: (() -> Void)?, failure: ((Failure) -> Void)?) {
+        switch self {
+        case .success: success?()
+        case .failure(let error): failure?(error)
+        }
+    }
+
+    func forwardTo(success: (Success) -> Void, failure: (Failure) -> Void) {
+        switch self {
+        case .success(let value): success(value)
+        case .failure(let error): failure(error)
+        }
+    }
+
+    func forwardTo(success: ((Success) -> Void)?, failure: ((Failure) -> Void)?) {
+        switch self {
+        case .success(let value): success?(value)
+        case .failure(let error): failure?(error)
+        }
+    }
+
+    func forwardTo(success: (Success) -> Void, failure: (NSError) -> Void) {
+        let wrappedFailure: (Failure) -> Void = { failure($0 as NSError) }
+        forwardTo(success: success, failure: wrappedFailure)
+    }
+
+    func forwardTo(success: (() -> Void)?, failure: ((NSError) -> Void)?) {
+        let wrappedFailure: (Failure) -> Void = { failure?($0 as NSError) }
+        forwardTo(success: success, failure: wrappedFailure)
+    }
+
+    func forwardTo(success: (() -> Void)?, failure: ((NSError?) -> Void)?) {
+        let wrappedFailure: (Failure) -> Void = { failure?($0 as NSError) }
+        forwardTo(success: success, failure: wrappedFailure)
+    }
+
+    func forwardTo(success: ((Success) -> Void)?, failure: ((NSError) -> Void)?) {
+        let wrappedFailure: (Failure) -> Void = { failure?($0 as NSError) }
+        forwardTo(success: success, failure: wrappedFailure)
+    }
+
+    func forwardTo(success: ((Success) -> Void)?, failure: ((NSError?) -> Void)?) {
+        let wrappedFailure: (Failure) -> Void = { failure?($0 as NSError) }
+        forwardTo(success: success, failure: wrappedFailure)
     }
 }
