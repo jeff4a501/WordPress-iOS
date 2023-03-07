@@ -48,6 +48,8 @@ steps:
     notify:
       - github_commit_status:
           context: "Build for Testing"
+    agents:
+      queue: mac-arm
 
   #################
   # Run Unit Tests
@@ -66,6 +68,8 @@ steps:
           channels:
             - "#mobile-apps-tests-notif"
         if: build.state == "failed" && build.branch == "trunk"
+    agents:
+      queue: mac-arm
 
   #################
   # UI Tests
@@ -86,6 +90,8 @@ steps:
               channels:
                 - "#mobile-apps-tests-notif"
             if: build.state == "failed" && build.branch == "trunk"
+        agents:
+          queue: mac-arm
 
       - label: "🔬 UI Tests (iPad)"
         command: .buildkite/commands/run-ui-tests.sh "iPad Air (5th generation)"
@@ -101,7 +107,9 @@ steps:
               channels:
                 - "#mobile-apps-tests-notif"
             if: build.state == "failed" && build.branch == "trunk"
-
+        agents:
+          queue: mac-arm
+      
   #################
   # Linters
   #################
