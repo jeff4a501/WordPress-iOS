@@ -448,6 +448,10 @@ class MySiteViewController: UIViewController, NoResultsViewHost {
 
     @objc
     private func pulledToRefresh() {
+        let backgroundQueue = DispatchQueue(label: "test.backgroundQueue", qos: .background)
+        backgroundQueue.async {
+            let _ = JetpackNotificationMigrationService.shared.shouldPresentNotifications()
+        }
 
         guard let blog = blog,
               let section = currentSection else {

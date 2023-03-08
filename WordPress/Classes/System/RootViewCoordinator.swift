@@ -15,8 +15,18 @@ class RootViewCoordinator {
 
     // MARK: Static shared variables
 
-    static let shared = RootViewCoordinator(featureFlagStore: RemoteFeatureFlagStore(),
+    static private let privateShared = RootViewCoordinator(featureFlagStore: RemoteFeatureFlagStore(),
                                             windowManager: WordPressAppDelegate.shared?.windowManager)
+
+    // This triggers the initialization of a RootViewCoordinator every time `RootViewCoordinator.shared` is called.
+    // In other words, every call to `RootViewCoordinator.shared` will be as if we're calling it for the first time.
+    // We return `privateShared` to not affect the app's functionality.
+    static var shared: RootViewCoordinator {
+        let _ = RootViewCoordinator(featureFlagStore: RemoteFeatureFlagStore(),
+                                    windowManager: WordPressAppDelegate.shared?.windowManager)
+        return privateShared
+    }
+
     static var sharedPresenter: RootViewPresenter {
         shared.rootViewPresenter
     }
