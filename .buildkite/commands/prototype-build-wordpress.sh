@@ -1,8 +1,5 @@
 #!/bin/bash -eu
 
-# Sentry CLI needs to be up-to-date
-brew upgrade sentry-cli
-
 echo "--- :rubygems: Setting up Gems"
 install_gems
 

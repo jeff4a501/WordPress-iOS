@@ -2,8 +2,6 @@
 
 brew install imagemagick
 brew install ghostscript
-# Sentry CLI needs to be up-to-date
-brew upgrade sentry-cli
 
 echo "--- :rubygems: Setting up Gems"
 install_gems
