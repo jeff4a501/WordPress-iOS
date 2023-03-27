@@ -1,7 +1,3 @@
-22.3
------
-
-
 > [***] High Priority, e.g., Major Enhancements, Widespread Crash Fixes, etc.
 > [**] Medium Priority, e.g., Minor Enhancements Users Will Notice, etc.
 > [*] Low Priority, e.g., Minor Enhancements Users May Miss, etc.
