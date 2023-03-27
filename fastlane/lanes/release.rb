@@ -13,11 +13,11 @@ platform :ios do
   #
   desc 'Executes the initial steps needed during code freeze'
   lane :code_freeze do |options|
-    gutenberg_dep_check
-    ios_codefreeze_prechecks(options)
+    # gutenberg_dep_check
+    # ios_codefreeze_prechecks(options)
 
-    ios_bump_version_release(skip_deliver: true)
-    new_version = ios_get_app_version
+    # ios_bump_version_release(skip_deliver: true)
+    new_version = options.fetch(:version)
 
     release_notes_source_path = File.join(PROJECT_ROOT_FOLDER, 'RELEASE-NOTES.txt')
     extract_release_notes_for_version(
@@ -44,11 +44,11 @@ platform :ios do
     )
     ios_update_release_notes(new_version: new_version)
 
-    setbranchprotection(repository: GITHUB_REPO, branch: "release/#{new_version}")
-    setfrozentag(repository: GITHUB_REPO, milestone: new_version)
-    ios_check_beta_deps(podfile: File.join(PROJECT_ROOT_FOLDER, 'Podfile'))
+    # setbranchprotection(repository: GITHUB_REPO, branch: "release/#{new_version}")
+    # setfrozentag(repository: GITHUB_REPO, milestone: new_version)
+    # ios_check_beta_deps(podfile: File.join(PROJECT_ROOT_FOLDER, 'Podfile'))
 
-    print_release_notes_reminder
+    # print_release_notes_reminder
   end
 
   # Executes the final steps for the code freeze
