@@ -2,7 +2,6 @@ import Foundation
 import WordPressShared
 import Gridicons
 
-
 struct NavigationItemRow: ImmuTableRow {
     static let cell = ImmuTableCell.class(WPTableViewCellValue1.self)
 

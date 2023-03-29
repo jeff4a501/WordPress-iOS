@@ -92,6 +92,7 @@ extension WPTabBarController {
     /// Set up the tab bar's colors
     @objc func setupColors() {
         tabBar.isTranslucent = false
+        tabBar.tintColor = .tabSelected
     }
 
     open override var supportedInterfaceOrientations: UIInterfaceOrientationMask {
