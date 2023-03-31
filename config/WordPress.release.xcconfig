@@ -2,3 +2,4 @@
 #include "SDKVersions.xcconfig"
 
 BUILD_SCHEME=WordPress
+ASSETCATALOG_COMPILER_APPICON_NAME=AppIcon
