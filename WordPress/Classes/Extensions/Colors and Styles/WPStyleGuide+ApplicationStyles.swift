@@ -214,6 +214,7 @@ extension WPStyleGuide {
             return
         }
         if textLabel.isUserInteractionEnabled {
+            // FIXME: This is part of muriel. We might need to extra muriel and immutable in a dedicated framework, like BaseUI?
             textLabel.textColor = .primary
         }
     }

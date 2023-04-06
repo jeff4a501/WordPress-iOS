@@ -259,6 +259,10 @@ abstract_target 'Apps' do
   ## ===============
   ##
   target 'Jetpack'
+
+  target 'ImmuTable' do
+    wordpress_shared
+  end
 end
 
 ## Share Extension

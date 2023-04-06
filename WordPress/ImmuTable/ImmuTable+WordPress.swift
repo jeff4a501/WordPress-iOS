@@ -10,3 +10,17 @@ extension ImmuTableViewHandler {
         WPStyleGuide.configureTableViewSectionFooter(view)
     }
 }
+
+extension WPStyleGuide {
+    // TODO: Move this into WPStyleGuide. It's currently duplicated.
+    @objc
+    class func configureTableViewSectionFooter(_ footer: UIView) {
+        guard let footer = footer as? UITableViewHeaderFooterView,
+              let textLabel = footer.textLabel else {
+            return
+        }
+        if textLabel.isUserInteractionEnabled {
+            textLabel.textColor = .primary
+        }
+    }
+}
