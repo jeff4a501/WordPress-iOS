@@ -1,71 +1,72 @@
 
-extension MediaService {
+import Foundation
 
-    @objc(updateMedia:withRemoteMedia:)
-    func update(media: Media, with remoteMedia: RemoteMedia) {
-        if media.mediaID != remoteMedia.mediaID {
-            media.mediaID =  remoteMedia.mediaID
+extension Media {
+
+    @objc(updateWithRemoteMedia:)
+    func update(with remoteMedia: RemoteMedia) {
+        if mediaID != remoteMedia.mediaID {
+            mediaID =  remoteMedia.mediaID
         }
-        if media.remoteURL != remoteMedia.url?.absoluteString {
-            media.remoteURL = remoteMedia.url?.absoluteString
+        if remoteURL != remoteMedia.url?.absoluteString {
+            remoteURL = remoteMedia.url?.absoluteString
         }
-        if media.remoteLargeURL != remoteMedia.largeURL?.absoluteString {
-            media.remoteLargeURL = remoteMedia.largeURL?.absoluteString
+        if remoteLargeURL != remoteMedia.largeURL?.absoluteString {
+            remoteLargeURL = remoteMedia.largeURL?.absoluteString
         }
-        if media.remoteMediumURL != remoteMedia.mediumURL?.absoluteString {
-            media.remoteMediumURL = remoteMedia.mediumURL?.absoluteString
+        if remoteMediumURL != remoteMedia.mediumURL?.absoluteString {
+            remoteMediumURL = remoteMedia.mediumURL?.absoluteString
         }
-        if remoteMedia.date != nil && remoteMedia.date != media.creationDate {
-            media.creationDate = remoteMedia.date
+        if remoteMedia.date != nil && remoteMedia.date != creationDate {
+            creationDate = remoteMedia.date
         }
-        if media.filename != remoteMedia.file {
-            media.filename = remoteMedia.file
+        if filename != remoteMedia.file {
+            filename = remoteMedia.file
         }
         if let mimeType = remoteMedia.mimeType, !mimeType.isEmpty {
-            media.setMediaTypeForMimeType(mimeType)
+            setMediaTypeForMimeType(mimeType)
         } else if let fileExtension = remoteMedia.extension, !fileExtension.isEmpty {
-            media.setMediaTypeForExtension(fileExtension)
+            setMediaTypeForExtension(fileExtension)
         }
-        if media.title != remoteMedia.title {
-            media.title = remoteMedia.title
+        if title != remoteMedia.title {
+            title = remoteMedia.title
         }
-        if media.caption != remoteMedia.caption {
-            media.caption = remoteMedia.caption
+        if caption != remoteMedia.caption {
+            caption = remoteMedia.caption
         }
-        if media.desc != remoteMedia.descriptionText {
-            media.desc = remoteMedia.descriptionText
+        if desc != remoteMedia.descriptionText {
+            desc = remoteMedia.descriptionText
         }
-        if media.alt != remoteMedia.alt {
-            media.alt = remoteMedia.alt
+        if alt != remoteMedia.alt {
+            alt = remoteMedia.alt
         }
-        if media.height != remoteMedia.height {
-            media.height = remoteMedia.height
+        if height != remoteMedia.height {
+            height = remoteMedia.height
         }
-        if media.width != remoteMedia.width {
-            media.width = remoteMedia.width
+        if width != remoteMedia.width {
+            width = remoteMedia.width
         }
-        if media.shortcode != remoteMedia.shortcode {
-            media.shortcode = remoteMedia.shortcode
+        if shortcode != remoteMedia.shortcode {
+            shortcode = remoteMedia.shortcode
         }
-        if media.videopressGUID != remoteMedia.videopressGUID {
-            media.videopressGUID = remoteMedia.videopressGUID
+        if videopressGUID != remoteMedia.videopressGUID {
+            videopressGUID = remoteMedia.videopressGUID
         }
-        if media.length != remoteMedia.length {
-            media.length = remoteMedia.length
+        if length != remoteMedia.length {
+            length = remoteMedia.length
         }
-        if media.remoteThumbnailURL != remoteMedia.remoteThumbnailURL {
-            media.remoteThumbnailURL = remoteMedia.remoteThumbnailURL
+        if remoteThumbnailURL != remoteMedia.remoteThumbnailURL {
+            remoteThumbnailURL = remoteMedia.remoteThumbnailURL
         }
-        if media.postID != remoteMedia.postID {
-            media.postID = remoteMedia.postID
+        if postID != remoteMedia.postID {
+            postID = remoteMedia.postID
         }
-        if media.remoteStatus != .sync {
-            media.remoteStatus = .sync
+        if remoteStatus != .sync {
+            remoteStatus = .sync
         }
-        if media.error != nil {
-            media.error = nil
+        if error != nil {
+            error = nil
         }
-
     }
 
 }
