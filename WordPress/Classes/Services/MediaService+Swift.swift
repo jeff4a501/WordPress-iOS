@@ -69,4 +69,28 @@ extension Media {
         }
     }
 
+    @objc
+    func remoteRepresentation() -> RemoteMedia {
+        let remoteMedia = RemoteMedia()
+        remoteMedia.mediaID = mediaID
+        remoteMedia.url = remoteURL.flatMap(URL.init(string:))
+        remoteMedia.largeURL = remoteLargeURL.flatMap(URL.init(string:))
+        remoteMedia.mediumURL = remoteMediumURL.flatMap(URL.init(string:))
+        remoteMedia.date = creationDate
+        remoteMedia.file = filename
+        remoteMedia.`extension` = fileExtension() ?? "unknown"
+        remoteMedia.title = title
+        remoteMedia.caption = caption
+        remoteMedia.descriptionText = desc
+        remoteMedia.alt = alt
+        remoteMedia.height = height
+        remoteMedia.width = width
+        remoteMedia.localURL = absoluteLocalURL
+        remoteMedia.mimeType = mimeType()
+        remoteMedia.videopressGUID = videopressGUID
+        remoteMedia.remoteThumbnailURL = remoteThumbnailURL
+        remoteMedia.postID = postID
+        return remoteMedia
+    }
+
 }
