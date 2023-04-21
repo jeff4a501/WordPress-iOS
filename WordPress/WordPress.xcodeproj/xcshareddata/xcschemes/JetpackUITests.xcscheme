@@ -29,7 +29,10 @@
       shouldUseLaunchSchemeArgsEnv = "YES">
       <TestPlans>
          <TestPlanReference
-            reference = "container:WordPressUITests/JetpackUITests.xctestplan"
+            reference = "container:WordPressUITests/JetpackUITests.xctestplan">
+         </TestPlanReference>
+         <TestPlanReference
+            reference = "container:UITests/JetpackUITests.xctestplan"
             default = "YES">
          </TestPlanReference>
       </TestPlans>
