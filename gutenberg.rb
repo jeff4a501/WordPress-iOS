@@ -4,6 +4,8 @@
 
 GUTENBERG_VERSION = 'v1.93.0'
 
+USE_XCFRAMEWORK = true
+
 # Note that the pods in this array might seem unused if you look for
 # `import` statements in this codebase. However, make sure to also check
 # whether they are used in the gutenberg-mobile and Gutenberg projects.
@@ -76,16 +78,21 @@ def gutenberg_dependencies(options:)
 end
 
 def gutenberg_pods(options: {})
-  options[:git] = "https://github.com/#{REPO}.git"
-  options[:submodules] = true
-  options[:tag] = GUTENBERG_VERSION
+  if USE_XCFRAMEWORK
+    pod 'Gutenberg', path: './Gutenberg'
+  else
+    # TODO: We'll want to remove the option to use the pods from gutenberg-mobile and only leave the local path option once the XCFramework implementation is solid
+    options[:git] = "https://github.com/#{REPO}.git"
+    options[:submodules] = true
+    options[:tag] = GUTENBERG_VERSION
 
-  local_gutenberg = ENV.fetch('LOCAL_GUTENBERG', nil)
-  if local_gutenberg
-    options = { path: local_gutenberg.include?('/') ? local_gutenberg : '../gutenberg-mobile' }
+    local_gutenberg = ENV.fetch('LOCAL_GUTENBERG', nil)
+    if local_gutenberg
+      options = { path: local_gutenberg.include?('/') ? local_gutenberg : '../gutenberg-mobile' }
+    end
+
+    pod 'Gutenberg', options
+    pod 'RNTAztecView', options
+    gutenberg_dependencies(options: options)
   end
-
-  pod 'Gutenberg', options
-  pod 'RNTAztecView', options
-  gutenberg_dependencies(options: options)
 end
