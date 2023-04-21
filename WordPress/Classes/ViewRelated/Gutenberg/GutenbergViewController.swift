@@ -1,6 +1,7 @@
 import UIKit
 import WPMediaPicker
-import Gutenberg
+import Johannes
+import React
 import Aztec
 import WordPressFlux
 import Kanvas
