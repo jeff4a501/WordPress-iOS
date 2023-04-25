@@ -79,6 +79,8 @@ end
 
 def gutenberg_pods(options: {})
   if USE_XCFRAMEWORK
+    # TODO: Eventually, it would be great to switch to the official podspec for tag release.
+    # But that will be possible only once all the work is merged, otherwise we'd still have to download the whole repo while in development.
     pod 'Gutenberg', path: './Gutenberg'
   else
     # TODO: We'll want to remove the option to use the pods from gutenberg-mobile and only leave the local path option once the XCFramework implementation is solid
