@@ -18,6 +18,9 @@ class RegisterDomainSuggestionsViewController: UIViewController {
     private var domainsTableViewController: DomainSuggestionsTableViewController?
     private var domainType: DomainType = .registered
     private var includeSupportButton: Bool = true
+    private var selectedSuggestion: DomainSuggestion!
+    private var supportsPrivacy: Bool = false
+    private var selectedDomain: FullyQuotedDomainSuggestion!
 
     private var webViewURLChangeObservation: NSKeyValueObservation?
 
@@ -247,15 +250,28 @@ extension RegisterDomainSuggestionsViewController: NUXButtonViewControllerDelega
             return
         }
 
-        let proxy = RegisterDomainDetailsServiceProxy()
-        proxy.createPersistentDomainShoppingCart(siteID: siteID,
-                                                 domainSuggestion: domain.remoteSuggestion(),
-                                                 privacyProtectionEnabled: domain.supportsPrivacy ?? false,
-                                                 success: { [weak self] _ in
-            self?.presentWebViewForCurrentSite(domainSuggestion: domain)
-            self?.setPrimaryButtonLoading(false, afterDelay: 0.25)
-        },
-                                                 failure: { error in })
+        self.selectedDomain = domain
+        self.selectedSuggestion = domain.remoteSuggestion()
+        self.supportsPrivacy = domain.supportsPrivacy ?? false
+        self.presentBuyDomain()
+
+//        let proxy = RegisterDomainDetailsServiceProxy()
+//        proxy.createPersistentDomainShoppingCart(siteID: siteID,
+//                                                 domainSuggestion: domain.remoteSuggestion(),
+//                                                 privacyProtectionEnabled: domain.supportsPrivacy ?? false,
+//                                                 success: { [weak self] _ in
+////            self?.presentWebViewForCurrentSite(domainSuggestion: domain)
+//            self?.presentBuyDomain()
+//            self?.setPrimaryButtonLoading(false, afterDelay: 0.25)
+//        },
+//                                                 failure: { error in })
+    }
+
+    private func presentBuyDomain() {
+        let viewController = BuyPlanViewController(blog: site)
+        viewController.planDelegate = self
+
+        self.present(viewController, animated: true)
     }
 
     static private let checkoutURLPrefix = "https://wordpress.com/checkout"
@@ -349,6 +365,98 @@ extension RegisterDomainSuggestionsViewController: NUXButtonViewControllerDelega
             present(navController, animated: true)
         }
     }
+
+    private func presentWebViewForCurrentSite2(domainSuggestion: FullyQuotedDomainSuggestion) {
+        guard let homeURL = site.homeURL,
+              let siteUrl = URL(string: homeURL as String), let host = siteUrl.host,
+              let url = URL(string: Constants.plansWebAddress + host + "?domainAndPlanPackage=true"),
+              let siteID = site.dotComID?.intValue else {
+            return
+        }
+
+        //https://wordpress.com/plans/yearly/privatesiteforme123123123.wordpress.com?domainAndPlanPackage=true
+
+        let webViewController = WebViewControllerFactory.controllerWithDefaultAccountAndSecureInteraction(url: url, source: "domains_register")
+        let navController = LightNavigationController(rootViewController: webViewController)
+
+        // WORKAROUND: The reason why we have to use this mechanism to detect success and failure conditions
+        // for domain registration is because our checkout process (for some unknown reason) doesn't trigger
+        // call to WKWebViewDelegate methods.
+        //
+        // This was last checked by @diegoreymendez on 2021-09-22.
+        //
+        webViewURLChangeObservation = webViewController.webView.observe(\.url, options: .new) { [weak self] _, change in
+            guard let self = self,
+                  let newURL = change.newValue as? URL else {
+                return
+            }
+
+            self.handleWebViewURLChange(newURL, siteID: siteID, domain: domainSuggestion.domainName, onCancel: {
+                navController.dismiss(animated: true)
+            }) { domain in
+                self.dismiss(animated: true, completion: { [weak self] in
+                    self?.domainPurchasedCallback(domain)
+                })
+            }
+        }
+
+        WPAnalytics.track(.domainsPurchaseWebviewViewed, properties: WPAnalytics.domainsProperties(for: site), blog: site)
+
+        if let storeSandboxCookie = (HTTPCookieStorage.shared.cookies?.first {
+
+            $0.properties?[.name] as? String == Constants.storeSandboxCookieName &&
+            $0.properties?[.domain] as? String == Constants.storeSandboxCookieDomain
+        }) {
+            // this code will only run if a store sandbox cookie has been set
+            let webView = webViewController.webView
+            let cookieStore = webView.configuration.websiteDataStore.httpCookieStore
+            cookieStore.getAllCookies { [weak self] cookies in
+
+                    var newCookies = cookies
+                    newCookies.append(storeSandboxCookie)
+
+                    cookieStore.setCookies(newCookies) {
+                        self?.present(navController, animated: true)
+                    }
+            }
+        } else {
+            present(navController, animated: true)
+        }
+    }
+}
+
+extension RegisterDomainSuggestionsViewController: BuyPlanViewControllerDelegate {
+    func didSelectPlan(_ plan: RemotePlan_ApiVersion1_3) {
+        guard let api = site.wordPressComRestApi() else { return  }
+
+        let endPoint = "me/shopping-cart/\(site.dotComID!.intValue)"
+        let urlPath = "rest/v1.1/\(endPoint)"
+
+        var productDictionary1: [String: AnyObject] = ["product_id": selectedSuggestion.productID as AnyObject,
+                                                      "meta": selectedSuggestion.domainName as AnyObject]
+
+        var productDictionary2: [String: AnyObject] = ["product_id": (plan.planID ?? "1") as AnyObject,
+                                                       "product_slug": (plan.productSlug ?? "") as AnyObject]
+
+        if supportsPrivacy {
+            productDictionary1["extra"] = ["privacy": true] as AnyObject
+        }
+
+        productDictionary2["extra"] = ["isAkismetSitelessCheckout": false, "isJetpackCheckout": false, "context": "calypstore"] as AnyObject
+
+        let parameters: [String: AnyObject] = ["temporary": ("false") as AnyObject,
+                                               "products": [productDictionary1, productDictionary2] as AnyObject]
+
+        api.POST(urlPath,
+                                 parameters: parameters,
+                                 success: { [weak self] (response, _) in
+            guard let self = self else { return }
+            self.presentWebViewForCurrentSite(domainSuggestion: self.selectedDomain)
+            print(response)
+        }) { (error, _) in
+            print("error")
+        }
+    }
 }
 
 // MARK: - Constants
@@ -369,6 +477,7 @@ extension RegisterDomainSuggestionsViewController {
         static let viewControllerIdentifier = "RegisterDomainSuggestionsViewController"
 
         static let checkoutWebAddress = "https://wordpress.com/checkout/"
+        static let plansWebAddress = "https://wordpress.com/plans/yearly/"
         // store sandbox cookie
         static let storeSandboxCookieName = "store_sandbox"
         static let storeSandboxCookieDomain = ".wordpress.com"
