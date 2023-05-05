@@ -105,9 +105,11 @@ class BuyPlanItemCell: UITableViewCell {
 }
 class BuyPlanViewModel {
     private let blog: Blog
+    private let planService: PlanServiceRemote
 
     init(blog: Blog) {
         self.blog = blog
+        self.planService = PlanServiceRemote(wordPressComRestApi: blog.wordPressComRestApi()!)
     }
 
     func getPlans(_ completion: @escaping ([RemotePlan_ApiVersion1_3]) -> Void) {
@@ -116,15 +118,38 @@ class BuyPlanViewModel {
                 return
         }
 
-        let remote_v1_3 = PlanServiceRemote_ApiVersion1_3(wordPressComRestApi: restAPI)
-        remote_v1_3.getPlansForSite(
-            siteID,
-            success: { (plans) in
-                completion(plans.availablePlans)
-            },
-            failure: { error in
-                completion([])
-            }
-        )
+        planService.getWpcomPlans { availablePlans in
+            print(availablePlans)
+        } failure: { error in
+            print(error)
+        }
+
+
+
+//        let remote_v1_3 = PlanServiceRemote_ApiVersion1_3(wordPressComRestApi: restAPI)
+//        remote_v1_3.getPlansForSite(
+//            siteID,
+//            success: { (plans) in
+//                completion(plans.availablePlans)
+//            },
+//            failure: { error in
+//                completion([])
+//            }
+        //        )
+
+
+        let endPoint = "sites/\(siteID)/plans/mobile"
+        let urlPath = "wpcom/v2/\(endPoint)"
+
+        restAPI.GET(urlPath, parameters: nil) { result, response in
+            print(result)
+            print(response)
+        }
     }
+}
+
+struct PlanV2 {
+    let name: String
+    let desc: String
+    let price: String
 }
