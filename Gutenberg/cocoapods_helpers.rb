@@ -1,7 +1,17 @@
 # frozen_string_literal: true
 
 # Helpers and configurations for integrating Gutenberg in Jetpack and WordPress via CocoaPods.
-require 'json'
+
+
+# The version.json file isolates the definition of which version of Gutenberg to use.
+# This way, it can be accessed by multiple sources without duplication.
+
+# Either use commit or tag. if both are present, tag will take precedence.
+# If you want to use a local version, please use the LOCAL_GUTENBERG environment variable when calling CocoaPods.
+#
+# Example:
+#
+#   LOCAL_GUTENBERG=../my-gutenberg-fork bundle exec pod install
 
 gutenberg_info_json = File.read(File.join(__dir__, 'version.json'))
 gutenberg_info = JSON.parse(gutenberg_info_json, symbolize_names: true)
