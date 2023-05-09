@@ -7,8 +7,7 @@ gutenberg_info_json = File.read(File.join(__dir__, 'version.json'))
 gutenberg_info = JSON.parse(gutenberg_info_json, symbolize_names: true)
 
 GUTENBERG_CONFIG = gutenberg_info[:config]
-GITHUB_ORG = gutenberg_info[:github_org]
-REPO_NAME = gutenberg_info[:repo_name]
+GUTENBERG_GITHUB_REPO = gutenberg_info[:repo]
 
 DEFAULT_GUTENBERG_LOCATION = File.join(__dir__, '..', '..', 'gutenberg-mobile')
 
@@ -75,7 +74,7 @@ def gutenberg_pod(config: GUTENBERG_CONFIG)
 
     raise "Could not find Gutenberg pod at #{options[:path]}. You can configure the path using the #{local_gutenberg_key} environment variable." unless File.exist?(options[:path])
   else
-    options[:git] = "https://github.com/#{GITHUB_ORG}/#{REPO_NAME}.git"
+    options[:git] = "https://github.com/#{GUTENBERG_GITHUB_REPO}.git"
     options[:submodules] = true
   end
 
@@ -90,7 +89,7 @@ def gutenberg_dependencies(options:)
     podspec_prefix = options[:path]
   else
     tag_or_commit = options[:tag] || options[:commit]
-    podspec_prefix = "https://raw.githubusercontent.com/#{GITHUB_ORG}/#{REPO_NAME}/#{tag_or_commit}"
+    podspec_prefix = "https://raw.githubusercontent.com/#{GUTENBERG_GITHUB_REPO}/#{tag_or_commit}"
   end
 
   podspec_prefix += '/third-party-podspecs'
