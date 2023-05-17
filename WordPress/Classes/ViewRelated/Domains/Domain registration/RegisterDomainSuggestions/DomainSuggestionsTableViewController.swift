@@ -386,7 +386,7 @@ extension DomainSuggestionsTableViewController {
     private func attributedCostInformation(for suggestion: FullyQuotedDomainSuggestion) -> NSAttributedString {
         let attributedString = NSMutableAttributedString()
 
-        let hasDomainCredit = blog?.hasDomainCredit ?? false
+        let hasDomainCredit = true //blog?.hasDomainCredit ?? false
 
         if hasDomainCredit {
             attributedString.append(attributedFreeForTheFirstYear())

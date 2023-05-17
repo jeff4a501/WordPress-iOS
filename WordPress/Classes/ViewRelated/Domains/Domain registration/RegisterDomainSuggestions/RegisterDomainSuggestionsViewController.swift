@@ -3,6 +3,7 @@ import UIKit
 import WebKit
 import WordPressAuthenticator
 import WordPressFlux
+import Combine
 
 class RegisterDomainSuggestionsViewController: UIViewController {
     @IBOutlet weak var buttonContainerBottomConstraint: NSLayoutConstraint!
@@ -21,6 +22,7 @@ class RegisterDomainSuggestionsViewController: UIViewController {
     private var selectedSuggestion: DomainSuggestion!
     private var supportsPrivacy: Bool = false
     private var selectedDomain: FullyQuotedDomainSuggestion!
+    private var subscriptions: Set<AnyCancellable> = []
 
     private var webViewURLChangeObservation: NSKeyValueObservation?
 
@@ -256,18 +258,18 @@ extension RegisterDomainSuggestionsViewController: NUXButtonViewControllerDelega
         self.selectedDomain = domain
         self.selectedSuggestion = domain.remoteSuggestion()
         self.supportsPrivacy = domain.supportsPrivacy ?? false
-        self.presentBuyDomain()
+//        self.presentBuyDomain()
 
-//        let proxy = RegisterDomainDetailsServiceProxy()
-//        proxy.createPersistentDomainShoppingCart(siteID: siteID,
-//                                                 domainSuggestion: domain.remoteSuggestion(),
-//                                                 privacyProtectionEnabled: domain.supportsPrivacy ?? false,
-//                                                 success: { [weak self] _ in
-////            self?.presentWebViewForCurrentSite(domainSuggestion: domain)
+        let proxy = RegisterDomainDetailsServiceProxy()
+        proxy.createPersistentDomainShoppingCart(siteID: siteID,
+                                                 domainSuggestion: domain.remoteSuggestion(),
+                                                 privacyProtectionEnabled: domain.supportsPrivacy ?? false,
+                                                 success: { [weak self] _ in
+            self?.presentWebViewForCurrentSite2(domainSuggestion: domain)
 //            self?.presentBuyDomain()
-//            self?.setPrimaryButtonLoading(false, afterDelay: 0.25)
-//        },
-//                                                 failure: { error in })
+            self?.setPrimaryButtonLoading(false, afterDelay: 0.25)
+        },
+                                                 failure: { error in })
     }
 
     private func presentBuyDomain() {
@@ -298,18 +300,17 @@ extension RegisterDomainSuggestionsViewController: NUXButtonViewControllerDelega
         onCancel: () -> Void,
         onSuccess: (String) -> Void) {
 
-        let canOpenNewURL = newURL.absoluteString.starts(with: Self.checkoutURLPrefix)
-
-        guard canOpenNewURL else {
-            onCancel()
-            return
-        }
+//        let canOpenNewURL = newURL.absoluteString.starts(with: Self.checkoutURLPrefix)
+//
+//        guard canOpenNewURL else {
+//            onCancel()
+//            return
+//        }
 
         let domainRegistrationSucceeded = newURL.absoluteString.starts(with: Self.checkoutSuccessURLPrefix)
 
         if domainRegistrationSucceeded {
             onSuccess(domain)
-
         }
     }
 
@@ -357,12 +358,12 @@ extension RegisterDomainSuggestionsViewController: NUXButtonViewControllerDelega
             let cookieStore = webView.configuration.websiteDataStore.httpCookieStore
             cookieStore.getAllCookies { [weak self] cookies in
 
-                    var newCookies = cookies
-                    newCookies.append(storeSandboxCookie)
+                var newCookies = cookies
+                newCookies.append(storeSandboxCookie)
 
-                    cookieStore.setCookies(newCookies) {
-                        self?.present(navController, animated: true)
-                    }
+                cookieStore.setCookies(newCookies) {
+                    self?.present(navController, animated: true)
+                }
             }
         } else {
             present(navController, animated: true)
@@ -402,6 +403,18 @@ extension RegisterDomainSuggestionsViewController: NUXButtonViewControllerDelega
                 })
             }
         }
+
+        subscriptions.removeAll()
+        webViewController.webView.publisher(for: \.url)
+            .sink { [weak self] url in
+                guard let self, let url = url else { return }
+
+                if url.absoluteString.starts(with: "https://wordpress.com/checkout") {
+                    self.getShoppingCart()
+                    navController.dismiss(animated: true)
+                }
+            }
+            .store(in: &subscriptions)
 
         WPAnalytics.track(.domainsPurchaseWebviewViewed, properties: WPAnalytics.domainsProperties(for: site), blog: site)
 
@@ -458,6 +471,25 @@ extension RegisterDomainSuggestionsViewController: BuyPlanViewControllerDelegate
             print(response)
         }) { (error, _) in
             print("error")
+        }
+    }
+}
+
+extension RegisterDomainSuggestionsViewController {
+    func getShoppingCart() {
+        guard let dotcomid = site.dotComID?.intValue else { return }
+        guard let api = site.wordPressComRestApi() else { return  }
+
+        let endPoint = "me/shopping-cart/\(dotcomid)"
+        let urlPath = "rest/v1.1/\(endPoint)"
+        api.GET(urlPath,
+                parameters: [:],
+                                 success: { [weak self] (response, _) in
+            guard let self = self else { return }
+            self.presentWebViewForCurrentSite(domainSuggestion: self.selectedDomain)
+            print("Shopping cart: \(response)")
+        }) { (error, _) in
+            print("Shopping cart: \(error.localizedDescription)")
         }
     }
 }

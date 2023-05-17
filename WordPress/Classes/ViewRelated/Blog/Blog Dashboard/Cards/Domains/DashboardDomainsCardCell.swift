@@ -149,8 +149,8 @@ extension DashboardDomainsCardCell {
     }
 
     private enum Strings {
-        static let title = NSLocalizedString("domain.dashboard.card.shortTitle",
-                                             value: "Find a custom domain",
+        static let title = NSLocalizedString("domain.dashboard.card.shortTitle4",
+                                             value: "Get free domain with an annual plan!",
                                              comment: "Title for the Domains dashboard card.")
         static let description = NSLocalizedString("domain.dashboard.card.description",
                                                    value: "Stake your claim on your corner of the web with a site address that’s easy to find, share and follow.",
