@@ -231,6 +231,7 @@ import Foundation
     case domainsRegistrationFormViewed
     case domainsRegistrationFormSubmitted
     case domainsPurchaseWebviewViewed
+    case domainsPurchaseSucceeded
 
     // My Site
     case mySitePullToRefresh
@@ -253,6 +254,10 @@ import Foundation
     case postListShareAction
     case postListSetAsPostsPageAction
     case postListSetHomePageAction
+
+    // Page List
+    case pageListEditHomepageTapped
+    case pageListEditHomepageInfoTapped
 
     // Reader: Filter Sheet
     case readerFilterSheetDisplayed
@@ -890,6 +895,8 @@ import Foundation
             return "domains_registration_form_submitted"
         case .domainsPurchaseWebviewViewed:
             return "domains_purchase_webview_viewed"
+        case .domainsPurchaseSucceeded:
+            return "domains_purchase_domain_success"
 
         // My Site
         case .mySitePullToRefresh:
@@ -918,12 +925,20 @@ import Foundation
             return "site_switcher_search_performed"
         case .siteSwitcherToggleBlogVisible:
             return "site_switcher_toggle_blog_visible"
+
+        // Post List
         case .postListShareAction:
             return "post_list_button_pressed"
         case .postListSetAsPostsPageAction:
             return "post_list_button_pressed"
         case .postListSetHomePageAction:
             return "post_list_button_pressed"
+
+        // Page List
+        case .pageListEditHomepageTapped:
+            return "page_list_edit_homepage_item_pressed"
+        case .pageListEditHomepageInfoTapped:
+            return "page_list_edit_homepage_info_pressed"
 
         // Reader: Filter Sheet
         case .readerFilterSheetDisplayed:
