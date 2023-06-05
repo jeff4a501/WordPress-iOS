@@ -27,5 +27,7 @@ class DashboardTests: XCTestCase {
             .selectDomain()
             .goToPlanSelection()
             .verifyPlanSelectionScreenLoaded()
+            .selectPlan()
+            .purchase()
     }
 }
