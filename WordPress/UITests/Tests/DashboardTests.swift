@@ -29,5 +29,7 @@ class DashboardTests: XCTestCase {
             .verifyPlanSelectionScreenLoaded()
             .selectPlan()
             .purchase()
+            .verifyDomainResultScreenLoaded()
+            .dismissResultScreen()
     }
 }
