@@ -144,8 +144,6 @@ platform :ios do
     git_commit(path: [wordpress_en_lproj], message: 'Update strings for localization', allow_nothing_to_commit: true) unless options[:skip_commit]
   end
 
-
-
   # Updates the `AppStoreStrings.po` files (WP+JP) with the latest content from the `release_notes.txt` files and the other text sources
   #
   # @option [String] version The current `x.y` version of the app. Optional. Used to derive the `release_notes_xxy` key to use in the `.po` file.
@@ -222,7 +220,6 @@ platform :ios do
       release_version: version
     )
   end
-
 
   # Downloads the localized app strings and App Store Connect metadata from GlotPress.
   #
@@ -437,6 +434,15 @@ platform :ios do
       glotpress_url: GLOTPRESS_JETPACK_APP_STORE_METADATA_PROJECT_URL,
       abort_on_violations: abort_on_violations,
       skip_confirm: skip_confirm
+    )
+  end
+
+  desc 'Lint _existing_ localization files.'
+  lane :lint_localizations do |options|
+    generate_strings_file_for_glotpress(skip_commit: true)
+    ios_lint_localizations(
+      input_dir: 'WordPress/Resources',
+      allow_retry: options.fetch(:allow_retry, true)
     )
   end
 end

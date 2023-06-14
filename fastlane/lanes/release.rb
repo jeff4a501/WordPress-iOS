@@ -93,7 +93,7 @@ platform :ios do
   lane :new_beta_release do |options|
     ios_betabuild_prechecks(options)
     download_localized_strings_and_metadata(options)
-    ios_lint_localizations(input_dir: 'WordPress/Resources', allow_retry: true)
+    lint_localizations
     ios_bump_version_beta
 
     if prompt_for_confirmation(
@@ -164,7 +164,7 @@ platform :ios do
     check_all_translations(interactive: true)
 
     download_localized_strings_and_metadata(options)
-    ios_lint_localizations(input_dir: 'WordPress/Resources', allow_retry: true)
+    ios_lint_localizations
     ios_bump_version_beta
 
     # Wrap up
