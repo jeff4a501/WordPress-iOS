@@ -1,3 +1,4 @@
+import AutomatticTracks
 import Foundation
 
 class EditHomepageViewController: GutenbergViewController {
@@ -6,10 +7,18 @@ class EditHomepageViewController: GutenbergViewController {
         loadAutosaveRevision: Bool = false,
         replaceEditor: @escaping ReplaceEditorCallback,
         editorSession: PostEditorAnalyticsSession? = nil,
-        navigationBarManager: PostEditorNavigationBarManager? = nil
+        navigationBarManager: PostEditorNavigationBarManager? = nil,
+        crashLogger: CrashLogging = .main
     ) {
         let navigationBarManager = navigationBarManager ?? HomepageEditorNavigationBarManager()
-        super.init(post: post, loadAutosaveRevision: loadAutosaveRevision, replaceEditor: replaceEditor, editorSession: editorSession, navigationBarManager: navigationBarManager)
+        super.init(
+            post: post,
+            loadAutosaveRevision: loadAutosaveRevision,
+            replaceEditor: replaceEditor,
+            editorSession: editorSession,
+            navigationBarManager: navigationBarManager,
+            crashLogger: crashLogger
+        )
     }
 
     required init?(coder aDecoder: NSCoder) {

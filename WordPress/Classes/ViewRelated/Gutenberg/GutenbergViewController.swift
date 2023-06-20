@@ -1,3 +1,4 @@
+import AutomatticTracks
 import UIKit
 import WPMediaPicker
 import Gutenberg
@@ -312,6 +313,8 @@ class GutenbergViewController: UIViewController, PostEditor, FeaturedImageDelega
         BlockEditorSettingsService(blog: post.blog, coreDataStack: ContextManager.sharedInstance())
     }()
 
+    private let crashLogger: CrashLogging
+
     // MARK: - Initializers
     required convenience init(
         post: AbstractPost,
@@ -333,7 +336,8 @@ class GutenbergViewController: UIViewController, PostEditor, FeaturedImageDelega
         loadAutosaveRevision: Bool = false,
         replaceEditor: @escaping ReplaceEditorCallback,
         editorSession: PostEditorAnalyticsSession? = nil,
-        navigationBarManager: PostEditorNavigationBarManager? = nil
+        navigationBarManager: PostEditorNavigationBarManager? = nil,
+        crashLogger: CrashLogging = .main
     ) {
 
         self.post = post
@@ -343,6 +347,8 @@ class GutenbergViewController: UIViewController, PostEditor, FeaturedImageDelega
         verificationPromptHelper = AztecVerificationPromptHelper(account: self.post.blog.account)
         self.editorSession = PostEditorAnalyticsSession(editor: .gutenberg, post: post)
         self.navigationBarManager = navigationBarManager ?? PostEditorNavigationBarManager()
+
+        self.crashLogger = crashLogger
 
         super.init(nibName: nil, bundle: nil)
 
@@ -599,7 +605,9 @@ extension GutenbergViewController: GutenbergBridgeDelegate {
 
     func gutenbergDidGetRequestFetch(path: String, completion: @escaping (Result<Any, NSError>) -> Void) {
         guard let managedObjectContext = post.managedObjectContext else {
-            completion(.failure(makePostWithNoContextError()))
+            let error = makePostWithNoContextError()
+            completion(.failure(error))
+            crashLogger.logError(error)
             return
         }
 
@@ -610,7 +618,9 @@ extension GutenbergViewController: GutenbergBridgeDelegate {
 
     func gutenbergDidPostRequestFetch(path: String, data: [String: AnyObject]?, completion: @escaping (Result<Any, NSError>) -> Void) {
         guard let managedObjectContext = post.managedObjectContext else {
-            completion(.failure(makePostWithNoContextError()))
+            let error = makePostWithNoContextError()
+            completion(.failure(error))
+            crashLogger.logError(error)
             return
         }
 
