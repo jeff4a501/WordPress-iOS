@@ -313,8 +313,19 @@ class GutenbergViewController: UIViewController, PostEditor, FeaturedImageDelega
     }()
 
     // MARK: - Initializers
-    required convenience init(post: AbstractPost, loadAutosaveRevision: Bool, replaceEditor: @escaping ReplaceEditorCallback, editorSession: PostEditorAnalyticsSession?) {
-        self.init(post: post, loadAutosaveRevision: loadAutosaveRevision, replaceEditor: replaceEditor, editorSession: editorSession)
+    required convenience init(
+        post: AbstractPost,
+        loadAutosaveRevision: Bool,
+        replaceEditor: @escaping ReplaceEditorCallback,
+        editorSession: PostEditorAnalyticsSession?
+    ) {
+        self.init(
+            post: post,
+            loadAutosaveRevision: loadAutosaveRevision,
+            replaceEditor: replaceEditor,
+            editorSession: editorSession,
+            navigationBarManager: nil // setting to the default value explicitly to avoid infinite recursion
+        )
     }
 
     required init(
