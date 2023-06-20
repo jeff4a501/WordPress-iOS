@@ -587,15 +587,35 @@ extension GutenbergViewController {
 extension GutenbergViewController: GutenbergBridgeDelegate {
 
     func gutenbergDidGetRequestFetch(path: String, completion: @escaping (Result<Any, NSError>) -> Void) {
-        post.managedObjectContext!.perform {
+        guard let managedObjectContext = post.managedObjectContext else {
+            completion(.failure(makePostWithNoContextError()))
+            return
+        }
+
+        managedObjectContext.perform {
             GutenbergNetworkRequest(path: path, blog: self.post.blog, method: .get).request(completion: completion)
         }
     }
 
     func gutenbergDidPostRequestFetch(path: String, data: [String: AnyObject]?, completion: @escaping (Result<Any, NSError>) -> Void) {
-        post.managedObjectContext!.perform {
+        guard let managedObjectContext = post.managedObjectContext else {
+            completion(.failure(makePostWithNoContextError()))
+            return
+        }
+
+        managedObjectContext.perform {
             GutenbergNetworkRequest(path: path, blog: self.post.blog, method: .post, data: data).request(completion: completion)
         }
+    }
+
+    private func makePostWithNoContextError() -> NSError {
+        NSError(
+            domain: errorDomain,
+            code: 1,
+            userInfo: [
+                NSLocalizedDescriptionKey: "Attempted to perform a CoreData operation on a Post with nil managedObjectContext"
+            ]
+        )
     }
 
     func editorDidAutosave() {
