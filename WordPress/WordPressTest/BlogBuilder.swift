@@ -119,8 +119,12 @@ final class BlogBuilder {
         return self
     }
 
-    func with(url: String) -> Self {
+    func with(url: String, alsoSetXMLRPC: Bool = true) -> Self {
         blog.url = url
+
+        if alsoSetXMLRPC {
+            blog.xmlrpc = NSString(string: url).appendingPathComponent("xmlrpc.php")
+        }
 
         return self
     }
