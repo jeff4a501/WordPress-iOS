@@ -5,18 +5,18 @@ class WPAccountLookupTests: CoreDataTestCase {
 
     func testIsDefaultWordPressComAccountIsFalseWhenNoAccountIsSet() {
         UserSettings.defaultDotComUUID = nil
-        let account = AccountBuilder(contextManager).build()
+        let account = AccountBuilder(contextManager.mainContext).build()
         XCTAssertFalse(account.isDefaultWordPressComAccount)
     }
 
     func testIsDefaultWordPressComAccountIsTrueWhenUUIDMatches() {
-        let account = AccountBuilder(contextManager).build()
+        let account = AccountBuilder(contextManager.mainContext).build()
         UserSettings.defaultDotComUUID = account.uuid
         XCTAssertTrue(account.isDefaultWordPressComAccount)
     }
 
     func testHasBlogsReturnsFalseWhenNoBlogsArePresentForAccount() {
-        let account = AccountBuilder(contextManager).build()
+        let account = AccountBuilder(contextManager.mainContext).build()
         XCTAssertFalse(account.hasBlogs)
     }
 
@@ -28,12 +28,12 @@ class WPAccountLookupTests: CoreDataTestCase {
     }
 
     func testLookupDefaultWordPressComAccountReturnsNilWhenNoAccountIsSet() throws {
-        let _ = AccountBuilder(contextManager).build()
+        let _ = AccountBuilder(contextManager.mainContext).build()
         try XCTAssertNil(WPAccount.lookupDefaultWordPressComAccount(in: contextManager.mainContext))
     }
 
     func testLookupDefaultWordPressComAccountReturnsAccount() throws {
-        let account = AccountBuilder(contextManager).build()
+        let account = AccountBuilder(contextManager.mainContext).build()
         UserSettings.defaultDotComUUID = account.uuid
 
         try XCTAssertEqual(WPAccount.lookupDefaultWordPressComAccount(in: contextManager.mainContext)?.uuid, account.uuid)
@@ -47,40 +47,40 @@ class WPAccountLookupTests: CoreDataTestCase {
     }
 
     func testLookupAccountByUUIDReturnsNilForInvalidAccount() throws {
-        AccountBuilder(contextManager).build()
+        AccountBuilder(contextManager.mainContext).build()
         try XCTAssertNil(WPAccount.lookup(withUUIDString: "", in: contextManager.mainContext))
     }
 
     func testLookupAccountByUUIDReturnsAccount() throws {
         let uuid = UUID().uuidString
-        AccountBuilder(contextManager).with(uuid: uuid).build()
+        AccountBuilder(contextManager.mainContext).with(uuid: uuid).build()
         try XCTAssertEqual(WPAccount.lookup(withUUIDString: uuid, in: contextManager.mainContext)?.uuid, uuid)
     }
 
     func testLookupAccountByUsernameReturnsNilIfNotFound() throws {
-        AccountBuilder(contextManager).build()
+        AccountBuilder(contextManager.mainContext).build()
         try XCTAssertNil(WPAccount.lookup(withUsername: "", in: contextManager.mainContext))
     }
 
     func testLookupAccountByUsernameReturnsAccountForUsername() throws {
         let username = UUID().uuidString
-        AccountBuilder(contextManager).with(username: username).build()
+        AccountBuilder(contextManager.mainContext).with(username: username).build()
         try XCTAssertEqual(WPAccount.lookup(withUsername: username, in: contextManager.mainContext)?.username, username)
     }
 
     func testLookupAccountByUsernameReturnsAccountForEmailAddress() throws {
         let email = UUID().uuidString
-        AccountBuilder(contextManager).with(email: email).build()
+        AccountBuilder(contextManager.mainContext).with(email: email).build()
         try XCTAssertEqual(WPAccount.lookup(withUsername: email, in: contextManager.mainContext)?.email, email)
     }
 
     func testLookupByUserIdReturnsNilIfNotFound() throws {
-        AccountBuilder(contextManager).with(id: 1).build() // Make a test account that we don't want to match
+        AccountBuilder(contextManager.mainContext).with(id: 1).build() // Make a test account that we don't want to match
         try XCTAssertNil(WPAccount.lookup(withUserID: 2, in: contextManager.mainContext))
     }
 
     func testLookupByUserIdReturnsAccount() throws {
-        AccountBuilder(contextManager).with(id: 1).build()
+        AccountBuilder(contextManager.mainContext).with(id: 1).build()
         try XCTAssertEqual(WPAccount.lookup(withUserID: 1, in: contextManager.mainContext)?.userID, 1)
     }
 
@@ -89,9 +89,9 @@ class WPAccountLookupTests: CoreDataTestCase {
     }
 
     func testLookupNumberOfAccountsReturnsCorrectValue() throws {
-        let _ = AccountBuilder(contextManager).build()
-        let _ = AccountBuilder(contextManager).build()
-        let _ = AccountBuilder(contextManager).build()
+        let _ = AccountBuilder(contextManager.mainContext).build()
+        let _ = AccountBuilder(contextManager.mainContext).build()
+        let _ = AccountBuilder(contextManager.mainContext).build()
 
         try XCTAssertEqual(WPAccount.lookupNumberOfAccounts(in: contextManager.mainContext), 3)
     }
