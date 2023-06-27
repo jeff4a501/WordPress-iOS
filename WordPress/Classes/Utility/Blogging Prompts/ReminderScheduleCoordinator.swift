@@ -121,12 +121,15 @@ class ReminderScheduleCoordinator {
 
 // MARK: - Private Helpers
 
-private extension ReminderScheduleCoordinator {
+extension ReminderScheduleCoordinator {
 
-    enum ReminderType {
+    enum ReminderType: Equatable {
         case bloggingReminders
         case bloggingPrompts
     }
+}
+
+private extension ReminderScheduleCoordinator {
 
     enum Constants {
         static let defaultHour = 10
