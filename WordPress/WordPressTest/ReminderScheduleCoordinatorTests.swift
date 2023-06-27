@@ -1,5 +1,6 @@
-import XCTest
+import Nimble
 import OHHTTPStubs
+import XCTest
 
 @testable import WordPress
 
@@ -146,6 +147,77 @@ class ReminderScheduleCoordinatorTests: CoreDataTestCase {
         XCTAssertNotNil(mockPromptScheduler.behavior.blogToUnschedule)
         XCTAssertNotNil(mockBloggingScheduler.behavior.blogToUnschedule)
         XCTAssertEqual(mockPromptScheduler.behavior.blogToUnschedule, mockBloggingScheduler.behavior.blogToUnschedule)
+    }
+}
+
+extension ReminderScheduleCoordinatorTests {
+
+    func testReminderType() {
+        // When blogging prompts are disabled, always returns .bloggingReminders
+        expect(
+            ReminderScheduleCoordinator.ReminderType.from(
+                settings: nil,
+                bloggingPromptsEnabled: false
+            )
+        ) == .bloggingReminders
+
+        expect(
+            ReminderScheduleCoordinator.ReminderType.from(
+                settings: self.makeBloggingPromptSettings(context: self.mainContext, promptsEnabled: true),
+                bloggingPromptsEnabled: false
+            )
+        ) == .bloggingReminders
+
+        expect(
+            ReminderScheduleCoordinator.ReminderType.from(
+                settings: self.makeBloggingPromptSettings(context: self.mainContext, promptsEnabled: false),
+                bloggingPromptsEnabled: false
+            )
+        ) == .bloggingReminders
+
+        // When the settings are nil, always return .bloggingReminders
+        expect(
+            ReminderScheduleCoordinator.ReminderType.from(
+                settings: nil,
+                bloggingPromptsEnabled: true
+            )
+        ) == .bloggingReminders
+
+        // When blogging prompts are enabled, follow what the settings say
+        expect(
+            ReminderScheduleCoordinator.ReminderType.from(
+                settings: self.makeBloggingPromptSettings(context: self.mainContext, promptsEnabled: true),
+                bloggingPromptsEnabled: true
+            )
+        ) == .bloggingPrompts
+
+        expect(
+            ReminderScheduleCoordinator.ReminderType.from(
+                settings: self.makeBloggingPromptSettings(context: self.mainContext, promptsEnabled: false),
+                bloggingPromptsEnabled: true
+            )
+        ) == .bloggingReminders
+    }
+
+    func makeBloggingPromptSettings(context: NSManagedObjectContext, promptsEnabled: Bool) -> BloggingPromptSettings {
+        let settings = BloggingPromptSettings(context: mainContext)
+        settings.configure(
+            with: RemoteBloggingPromptsSettings(
+                promptRemindersEnabled: promptsEnabled,
+                reminderDays: .init(
+                    monday: false,
+                    tuesday: false,
+                    wednesday: false,
+                    thursday: false,
+                    friday: false,
+                    saturday: false,
+                    sunday: false
+                ),
+                reminderTime: "00:00"),
+            siteID: 0,
+            context: mainContext
+        )
+        return settings
     }
 }
 

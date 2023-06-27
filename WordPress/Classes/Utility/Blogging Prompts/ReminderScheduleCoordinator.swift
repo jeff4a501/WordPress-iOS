@@ -163,3 +163,17 @@ private extension ReminderScheduleCoordinator {
         return reminderType
     }
 }
+
+extension ReminderScheduleCoordinator.ReminderType {
+
+    static func from(
+        settings: BloggingPromptSettings?,
+        bloggingPromptsEnabled: Bool = Feature.enabled(.bloggingPrompts)
+    ) -> Self {
+        guard bloggingPromptsEnabled, let settings else {
+            return .bloggingReminders
+        }
+
+        return settings.promptRemindersEnabled ? .bloggingPrompts : .bloggingReminders
+    }
+}
