@@ -154,49 +154,40 @@ extension ReminderScheduleCoordinatorTests {
 
     func testReminderType() {
         // When blogging prompts are disabled, always returns .bloggingReminders
-        expect(
-            ReminderScheduleCoordinator.ReminderType.from(
-                settings: nil,
-                bloggingPromptsEnabled: false
-            )
-        ) == .bloggingReminders
-
-        expect(
-            ReminderScheduleCoordinator.ReminderType.from(
-                settings: self.makeBloggingPromptSettings(context: self.mainContext, promptsEnabled: true),
-                bloggingPromptsEnabled: false
-            )
-        ) == .bloggingReminders
-
-        expect(
-            ReminderScheduleCoordinator.ReminderType.from(
-                settings: self.makeBloggingPromptSettings(context: self.mainContext, promptsEnabled: false),
-                bloggingPromptsEnabled: false
-            )
-        ) == .bloggingReminders
+        assert(featureFlagEnabled: false, settingsWithPromptsEnabled: nil, resultsIn: .bloggingReminders)
+        assert(featureFlagEnabled: false, settingsWithPromptsEnabled: true, resultsIn: .bloggingReminders)
+        assert(featureFlagEnabled: false, settingsWithPromptsEnabled: false, resultsIn: .bloggingReminders)
 
         // When the settings are nil, always return .bloggingReminders
-        expect(
-            ReminderScheduleCoordinator.ReminderType.from(
-                settings: nil,
-                bloggingPromptsEnabled: true
-            )
-        ) == .bloggingReminders
+        assert(featureFlagEnabled: true, settingsWithPromptsEnabled: nil, resultsIn: .bloggingReminders)
+        // the case with featureFlagEnabled: false was already tested above
 
         // When blogging prompts are enabled, follow what the settings say
-        expect(
-            ReminderScheduleCoordinator.ReminderType.from(
-                settings: self.makeBloggingPromptSettings(context: self.mainContext, promptsEnabled: true),
-                bloggingPromptsEnabled: true
-            )
-        ) == .bloggingPrompts
+        assert(featureFlagEnabled: true, settingsWithPromptsEnabled: false, resultsIn: .bloggingReminders)
+        assert(featureFlagEnabled: true, settingsWithPromptsEnabled: true, resultsIn: .bloggingPrompts)
+    }
+
+    func assert(
+        featureFlagEnabled: Bool,
+        settingsWithPromptsEnabled promptsEnabled: Bool?,
+        resultsIn expected: ReminderScheduleCoordinator.ReminderType,
+        file: StaticString = #file,
+        line: UInt = #line
+    ) {
+        let settings: BloggingPromptSettings?
+        if let promptsEnabled {
+            settings = makeBloggingPromptSettings(context: mainContext, promptsEnabled: promptsEnabled)
+        } else {
+            settings = nil
+        }
 
         expect(
+            file: file,
+            line: line,
             ReminderScheduleCoordinator.ReminderType.from(
-                settings: self.makeBloggingPromptSettings(context: self.mainContext, promptsEnabled: false),
-                bloggingPromptsEnabled: true
+                settings: settings, bloggingPromptsEnabled: featureFlagEnabled
             )
-        ) == .bloggingReminders
+        ) == expected
     }
 
     func makeBloggingPromptSettings(context: NSManagedObjectContext, promptsEnabled: Bool) -> BloggingPromptSettings {
