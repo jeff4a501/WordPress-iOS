@@ -185,7 +185,9 @@ extension ReminderScheduleCoordinatorTests {
             file: file,
             line: line,
             ReminderScheduleCoordinator.ReminderType.from(
-                settings: settings, bloggingPromptsEnabled: featureFlagEnabled
+                settings: settings,
+                in: self.mainContext,
+                bloggingPromptsEnabled: featureFlagEnabled
             )
         ) == expected
     }

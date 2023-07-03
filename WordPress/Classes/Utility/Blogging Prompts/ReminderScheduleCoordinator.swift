@@ -168,12 +168,19 @@ extension ReminderScheduleCoordinator.ReminderType {
 
     static func from(
         settings: BloggingPromptSettings?,
+        in context: NSManagedObjectContext,
         bloggingPromptsEnabled: Bool = Feature.enabled(.bloggingPrompts)
     ) -> Self {
         guard bloggingPromptsEnabled, let settings else {
             return .bloggingReminders
         }
 
-        return settings.promptRemindersEnabled ? .bloggingPrompts : .bloggingReminders
+        var reminderType: Self = .bloggingReminders
+        context.performAndWait {
+            if settings.promptRemindersEnabled {
+                reminderType = .bloggingPrompts
+            }
+        }
+        return reminderType
     }
 }
