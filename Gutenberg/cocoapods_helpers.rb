@@ -89,6 +89,7 @@ def gutenberg_dependencies(options:)
     # This is required to workaround an issue with RNReanimated after upgrading to version 2.17.0
     rn_node_modules = File.join(gutenberg_path, '..', 'gutenberg', 'node_modules')
     raise "Could not find node modules at given path #{rn_node_modules}" unless File.exist? rn_node_modules
+    
     ENV['REACT_NATIVE_NODE_MODULES_DIR'] = rn_node_modules
     puts "[Gutenberg] Set REACT_NATIVE_NODE_MODULES_DIR env var for RNReanimated to #{rn_node_modules}"
 
