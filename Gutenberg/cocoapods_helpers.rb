@@ -92,7 +92,7 @@ def gutenberg_dependencies(options:)
     ENV['REACT_NATIVE_NODE_MODULES_DIR'] = rn_node_modules
     puts "[Gutenberg] Set REACT_NATIVE_NODE_MODULES_DIR env var for RNReanimated to #{rn_node_modules}"
 
-    pod 'RNReanimated', git: 'https://github.com/wordpress-mobile/react-native-reanimated', branch: 'mokagio/fix-custom-node_modules-bypass-multiple-versions-check-2.17.0'
+    pod 'RNReanimated', git: 'https://github.com/wordpress-mobile/react-native-reanimated', branch: 'wp-fork-2.17.0'
   end
 
   computed_dependencies.each do |pod_name|
