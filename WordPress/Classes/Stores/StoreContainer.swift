@@ -10,7 +10,6 @@ class StoreContainer {
     @objc fileprivate func applicationWillResignActive() {
         try? plugin.persistState()
         statsInsights.persistToCoreData()
-        statsPeriod.persistToCoreData()
     }
 
     let plugin = PluginStore()

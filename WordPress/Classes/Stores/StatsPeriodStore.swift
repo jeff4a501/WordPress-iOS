@@ -249,26 +249,21 @@ class StatsPeriodStore: QueryStore<PeriodStoreState, PeriodQuery> {
         processQueries()
     }
 
-    func persistToCoreData() {
-        guard
-            let siteID = SiteStatsInformation.sharedInstance.siteID,
-            let blog = Blog.lookup(withID: siteID, in: ContextManager.shared.mainContext) else {
-                return
+    private func storeDataInCache() {
+        guard let siteID = SiteStatsInformation.sharedInstance.siteID else {
+            return
         }
-
-        _ = state.summary.flatMap { StatsRecord.record(from: $0, for: blog) }
-        _ = state.topPostsAndPages.flatMap { StatsRecord.record(from: $0, for: blog) }
-        _ = state.topReferrers.flatMap { StatsRecord.record(from: $0, for: blog) }
-        _ = state.topClicks.flatMap { StatsRecord.record(from: $0, for: blog) }
-        _ = state.topPublished.flatMap { StatsRecord.record(from: $0, for: blog) }
-        _ = state.topAuthors.flatMap { StatsRecord.record(from: $0, for: blog) }
-        _ = state.topSearchTerms.flatMap { StatsRecord.record(from: $0, for: blog) }
-        _ = state.topCountries.flatMap { StatsRecord.record(from: $0, for: blog) }
-        _ = state.topVideos.flatMap { StatsRecord.record(from: $0, for: blog) }
-        _ = state.topFileDownloads.flatMap { StatsRecord.record(from: $0, for: blog) }
-
-        try? ContextManager.shared.mainContext.save()
-        DDLogInfo("Stats Period: finished persisting Period Stats to disk.")
+        let cache = StatsDiskCache(siteID: siteID)
+        state.summary.map(cache.storeRecord)
+        state.topPostsAndPages.map(cache.storeRecord)
+        state.topReferrers.map(cache.storeRecord)
+        state.topClicks.map(cache.storeRecord)
+        state.topPublished.map(cache.storeRecord)
+        state.topAuthors.map(cache.storeRecord)
+        state.topSearchTerms.map(cache.storeRecord)
+        state.topCountries.map(cache.storeRecord)
+        state.topVideos.map(cache.storeRecord)
+        state.topFileDownloads.map(cache.storeRecord)
     }
 }
 
@@ -578,45 +573,32 @@ private extension StatsPeriodStore {
         if FeatureFlag.statsNewAppearance.enabled {
             group.notify(queue: .main) { [weak self] in
                 DDLogInfo("Stats Period: Finished fetchAsyncData.")
-                self?.persistToCoreData()
+                self?.storeDataInCache()
             }
         }
     }
 
     func loadFromCache(date: Date, period: StatsPeriodUnit) {
-        guard
-            let siteID = SiteStatsInformation.sharedInstance.siteID,
-            let blog = Blog.lookup(withID: siteID, in: ContextManager.shared.mainContext) else {
-                return
+        guard let siteID = SiteStatsInformation.sharedInstance.siteID else {
+            return
         }
-
-        let summary = StatsRecord.timeIntervalData(for: blog, type: .blogVisitsSummary, period: StatsRecordPeriodType(remoteStatus: period), date: date)
-        let posts = StatsRecord.timeIntervalData(for: blog, type: .topViewedPost, period: StatsRecordPeriodType(remoteStatus: period), date: date)
-        let referrers = StatsRecord.timeIntervalData(for: blog, type: .referrers, period: StatsRecordPeriodType(remoteStatus: period), date: date)
-        let clicks = StatsRecord.timeIntervalData(for: blog, type: .clicks, period: StatsRecordPeriodType(remoteStatus: period), date: date)
-        let published = StatsRecord.timeIntervalData(for: blog, type: .publishedPosts, period: StatsRecordPeriodType(remoteStatus: period), date: date)
-        let authors = StatsRecord.timeIntervalData(for: blog, type: .topViewedAuthor, period: StatsRecordPeriodType(remoteStatus: period), date: date)
-        let searchTerms = StatsRecord.timeIntervalData(for: blog, type: .searchTerms, period: StatsRecordPeriodType(remoteStatus: period), date: date)
-        let countries = StatsRecord.timeIntervalData(for: blog, type: .countryViews, period: StatsRecordPeriodType(remoteStatus: period), date: date)
-        let videos = StatsRecord.timeIntervalData(for: blog, type: .videos, period: StatsRecordPeriodType(remoteStatus: period), date: date)
-        let fileDownloads = StatsRecord.timeIntervalData(for: blog, type: .fileDownloads, period: StatsRecordPeriodType(remoteStatus: period), date: date)
-
-        DDLogInfo("Stats Period: Finished loading Period data from Core Data.")
-
+        let cache = StatsDiskCache(siteID: siteID)
+        func getCachedValue<T: Decodable & StatsTimeIntervalData>() -> T? {
+            cache.getCachedRecord(date: date, period: period)
+        }
         transaction { state in
-            state.summary = summary.flatMap { StatsSummaryTimeIntervalData(statsRecordValues: $0.recordValues) }
-            state.topPostsAndPages = posts.flatMap { StatsTopPostsTimeIntervalData(statsRecordValues: $0.recordValues) }
-            state.topReferrers = referrers.flatMap { StatsTopReferrersTimeIntervalData(statsRecordValues: $0.recordValues) }
-            state.topClicks = clicks.flatMap { StatsTopClicksTimeIntervalData(statsRecordValues: $0.recordValues) }
-            state.topPublished = published.flatMap { StatsPublishedPostsTimeIntervalData(statsRecordValues: $0.recordValues) }
-            state.topAuthors = authors.flatMap { StatsTopAuthorsTimeIntervalData(statsRecordValues: $0.recordValues) }
-            state.topSearchTerms = searchTerms.flatMap { StatsSearchTermTimeIntervalData(statsRecordValues: $0.recordValues) }
-            state.topCountries = countries.flatMap { StatsTopCountryTimeIntervalData(statsRecordValues: $0.recordValues) }
-            state.topVideos = videos.flatMap { StatsTopVideosTimeIntervalData(statsRecordValues: $0.recordValues) }
-            state.topFileDownloads = fileDownloads.flatMap { StatsFileDownloadsTimeIntervalData(statsRecordValues: $0.recordValues) }
-
-            DDLogInfo("Stats Period: Finished setting data to Period store from Core Data.")
+            state.summary = getCachedValue()
+            state.topPostsAndPages = getCachedValue()
+            state.topReferrers = getCachedValue()
+            state.topClicks = getCachedValue()
+            state.topPublished = getCachedValue()
+            state.topAuthors = getCachedValue()
+            state.topSearchTerms = getCachedValue()
+            state.topCountries = getCachedValue()
+            state.topVideos = getCachedValue()
+            state.topFileDownloads = getCachedValue()
         }
+        DDLogInfo("Stats Period: Finished setting data to Period store from disk cache.")
     }
 
     func refreshPeriodOverviewData(date: Date, period: StatsPeriodUnit, forceRefresh: Bool) {
@@ -624,7 +606,7 @@ private extension StatsPeriodStore {
         // It's here because call to this method will usually happen after user selects a different
         // time period they're interested in. If we only relied on calls to `persistToCoreData()`
         // when user has left the screen/app, we would possibly lose on storing A LOT of data.
-        persistToCoreData()
+        storeDataInCache()
 
         if forceRefresh {
             cancelQueries()
@@ -652,7 +634,7 @@ private extension StatsPeriodStore {
             DispatchQueue.main.async {
                 self?.receivedPostsAndPages(posts, error)
             }
-            self?.persistToCoreData()
+            self?.storeDataInCache()
         })
     }
 
@@ -684,7 +666,7 @@ private extension StatsPeriodStore {
             DispatchQueue.main.async {
                 self?.receivedSearchTerms(searchTerms, error)
             }
-            self?.persistToCoreData()
+            self?.storeDataInCache()
         })
     }
 
@@ -716,7 +698,7 @@ private extension StatsPeriodStore {
             DispatchQueue.main.async {
                 self?.receivedVideos(videos, error)
             }
-            self?.persistToCoreData()
+            self?.storeDataInCache()
         })
     }
 
@@ -748,7 +730,7 @@ private extension StatsPeriodStore {
             DispatchQueue.main.async {
                 self?.receivedClicks(clicks, error)
             }
-            self?.persistToCoreData()
+            self?.storeDataInCache()
         })
     }
 
@@ -780,7 +762,7 @@ private extension StatsPeriodStore {
             DispatchQueue.main.async {
                 self?.receivedAuthors(authors, error)
             }
-            self?.persistToCoreData()
+            self?.storeDataInCache()
         })
     }
 
@@ -812,7 +794,7 @@ private extension StatsPeriodStore {
             DispatchQueue.main.async {
                 self?.receivedReferrers(referrers, error)
             }
-            self?.persistToCoreData()
+            self?.storeDataInCache()
         })
     }
 
@@ -844,7 +826,7 @@ private extension StatsPeriodStore {
             DispatchQueue.main.async {
                 self?.receivedCountries(countries, error)
             }
-            self?.persistToCoreData()
+            self?.storeDataInCache()
         })
     }
 
@@ -876,7 +858,7 @@ private extension StatsPeriodStore {
             DispatchQueue.main.async {
                 self?.receivedPublished(published, error)
             }
-            self?.persistToCoreData()
+            self?.storeDataInCache()
         })
     }
 
@@ -908,7 +890,7 @@ private extension StatsPeriodStore {
             DispatchQueue.main.async {
                 self?.receivedFileDownloads(downloads, error)
             }
-            self?.persistToCoreData()
+            self?.storeDataInCache()
         })
     }
 
@@ -1465,3 +1447,40 @@ private extension StatsPeriodStore {
         })
     }
 }
+
+// MARK: - Cache
+
+struct StatsDiskCache {
+    private let siteID: NSNumber
+    private let cache: DiskCache
+
+    init(cache: DiskCache = .shared, siteID: NSNumber) {
+        self.cache = cache
+        self.siteID = siteID
+    }
+
+    func getCachedRecord<T: Decodable & StatsTimeIntervalData>(date: Date, period: StatsPeriodUnit) -> T? {
+        let key = StatsDiskCache.makeCacheKey(path: T.pathComponent, date: date, period: period, siteID: siteID)
+        return cache.getValue(T.self, forKey: key)
+    }
+
+    func storeRecord<T: Encodable & StatsTimeIntervalData>(_ record: T) {
+        let key = StatsDiskCache.makeCacheKey(for: record, siteID: siteID)
+        cache.setValue(record, forKey: key)
+    }
+
+    private static func makeCacheKey<T: StatsTimeIntervalData>(for record: T, siteID: NSNumber) -> String {
+        makeCacheKey(path: T.pathComponent, date: record.periodEndDate, period: record.period, siteID: siteID)
+    }
+
+    private static func makeCacheKey(path: String, date: Date, period: StatsPeriodUnit, siteID: NSNumber) -> String {
+        "stats/\(path)?date=\(cacheKeyDateFormatter.string(from: date)),period=\(period),siteID=\(siteID)"
+    }
+}
+
+private let cacheKeyDateFormatter: DateFormatter = {
+    let formatter = DateFormatter()
+    formatter.locale = Locale(identifier: "en_US_POSIX")
+    formatter.dateFormat = "yyyy-MM-dd"
+    return formatter
+}()
