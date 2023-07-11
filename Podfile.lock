@@ -612,7 +612,7 @@ DEPENDENCIES:
   - SwiftLint (~> 0.50)
   - WordPress-Editor-iOS (~> 1.19.8)
   - WordPressAuthenticator (~> 6.2.0)
-  - WordPressKit (~> 8.5)
+  - WordPressKit (from `https://github.com/wordpress-mobile/WordPressKit-iOS.git`, branch `task/add-codable-conformance-to-stats`)
   - WordPressShared (~> 2.2)
   - WordPressUI (~> 1.12.5)
   - WPMediaPicker (~> 1.8.8)
@@ -661,7 +661,6 @@ SPEC REPOS:
     - UIDeviceIdentifier
     - WordPress-Aztec-iOS
     - WordPress-Editor-iOS
-    - WordPressKit
     - WordPressShared
     - WordPressUI
     - WPMediaPicker
@@ -777,6 +776,9 @@ EXTERNAL SOURCES:
     :git: https://github.com/wordpress-mobile/gutenberg-mobile.git
     :submodules: true
     :tag: v1.100.0-alpha1
+  WordPressKit:
+    :branch: task/add-codable-conformance-to-stats
+    :git: https://github.com/wordpress-mobile/WordPressKit-iOS.git
   Yoga:
     :podspec: https://raw.githubusercontent.com/wordpress-mobile/gutenberg-mobile/v1.100.0-alpha1/third-party-podspecs/Yoga.podspec.json
 
@@ -792,6 +794,9 @@ CHECKOUT OPTIONS:
     :git: https://github.com/wordpress-mobile/gutenberg-mobile.git
     :submodules: true
     :tag: v1.100.0-alpha1
+  WordPressKit:
+    :commit: c9343c7ae8e6a489476c19126a39bb9c4a8d83a4
+    :git: https://github.com/wordpress-mobile/WordPressKit-iOS.git
 
 SPEC CHECKSUMS:
   Alamofire: 3ec537f71edc9804815215393ae2b1a8ea33a844
@@ -895,6 +900,6 @@ SPEC CHECKSUMS:
   ZendeskSupportSDK: 3a8e508ab1d9dd22dc038df6c694466414e037ba
   ZIPFoundation: ae5b4b813d216d3bf0a148773267fff14bd51d37
 
-PODFILE CHECKSUM: 463ed7d39926c127d8197fe925fd7d05125f647b
+PODFILE CHECKSUM: 35cce48e528472c566e4f87c0991a14b0c469228
 
 COCOAPODS: 1.12.1
