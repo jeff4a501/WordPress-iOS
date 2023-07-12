@@ -179,23 +179,15 @@ private extension StatsRevampStore {
     }
 
     private func loadViewsAndVisitorsCache(date: Date) {
-        guard
-            let siteID = SiteStatsInformation.sharedInstance.siteID,
-            let blog = Blog.lookup(withID: siteID, in: ContextManager.shared.mainContext) else {
-                return
+        guard let siteID = SiteStatsInformation.sharedInstance.siteID else {
+            return
         }
-
-        let summary = StatsRecord.timeIntervalData(for: blog, type: .blogVisitsSummary, period: StatsRecordPeriodType(remoteStatus: .day), date: date)
-        let referrers = StatsRecord.timeIntervalData(for: blog, type: .referrers, period: StatsRecordPeriodType(remoteStatus: .week), date: date)
-        let countries = StatsRecord.timeIntervalData(for: blog, type: .countryViews, period: StatsRecordPeriodType(remoteStatus: .week), date: date)
-
-        DDLogInfo("Stats Revamp Store: Finished loading Period data from Core Data.")
-
+        let cache = StatsDiskCache(siteID: siteID)
         transaction { state in
-            state.summary = summary.flatMap { StatsSummaryTimeIntervalData(statsRecordValues: $0.recordValues) }
-            state.topReferrers = referrers.flatMap { StatsTopReferrersTimeIntervalData(statsRecordValues: $0.recordValues) }
-            state.topCountries = countries.flatMap { StatsTopCountryTimeIntervalData(statsRecordValues: $0.recordValues) }
-            DDLogInfo("Stats Revamp Store: Finished setting data to Period store from Core Data.")
+            state.summary = cache.getCachedRecord(date: date, period: .day)
+            state.topReferrers = cache.getCachedRecord(date: date, period: .week)
+            state.topCountries = cache.getCachedRecord(date: date, period: .week)
+            DDLogInfo("Stats Revamp Store: Finished setting data to Period store from cache")
         }
     }
 }
@@ -251,21 +243,14 @@ private extension StatsRevampStore {
     }
 
     private func loadLikesTotalsCache(date: Date) {
-        guard
-            let siteID = SiteStatsInformation.sharedInstance.siteID,
-            let blog = Blog.lookup(withID: siteID, in: ContextManager.shared.mainContext) else {
-                return
+        guard let siteID = SiteStatsInformation.sharedInstance.siteID else {
+            return
         }
-
-        let summary = StatsRecord.timeIntervalData(for: blog, type: .blogVisitsSummary, period: StatsRecordPeriodType(remoteStatus: .day), date: date)
-        let posts = StatsRecord.timeIntervalData(for: blog, type: .topViewedPost, period: StatsRecordPeriodType(remoteStatus: .week), date: date)
-
-        DDLogInfo("Stats Revamp Store: Finished loading Period data from Core Data.")
-
+        let cache = StatsDiskCache(siteID: siteID)
         transaction { state in
-            state.summary = summary.flatMap { StatsSummaryTimeIntervalData(statsRecordValues: $0.recordValues) }
-            state.topPostsAndPages = posts.flatMap { StatsTopPostsTimeIntervalData(statsRecordValues: $0.recordValues) }
-            DDLogInfo("Stats Revamp Store: Finished setting data to Period store from Core Data.")
+            state.summary = cache.getCachedRecord(date: date, period: .day)
+            state.topPostsAndPages = cache.getCachedRecord(date: date, period: .week)
+            DDLogInfo("Stats Revamp Store: Finished setting data to Period store from cache.")
         }
     }
 }
@@ -381,21 +366,10 @@ private extension StatsRevampStore {
 }
 
 private extension StatsRevampStore {
-    func persistData<TimeIntervalType: StatsTimeIntervalData & TimeIntervalStatsRecordValueConvertible>(_ data: TimeIntervalType?) {
-        guard
-            let data,
-            let siteID = SiteStatsInformation.sharedInstance.siteID,
-            let blog = Blog.lookup(withID: siteID, in: ContextManager.shared.mainContext) else {
+    func persistData<TimeIntervalType: Encodable & StatsTimeIntervalData>(_ data: TimeIntervalType?) {
+        guard let data, let siteID = SiteStatsInformation.sharedInstance.siteID else {
             return
         }
-
-        _ = StatsRecord.record(from: data, for: blog)
-
-        do {
-            try ContextManager.shared.mainContext.save()
-            DDLogInfo("Stats Revamp Store: finished persisting stats to disk.")
-        } catch {
-            DDLogError("Stats Revamp Store: failed persisting stats to disk.")
-        }
+        StatsDiskCache(siteID: siteID).storeRecord(data)
     }
 }

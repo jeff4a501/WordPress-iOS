@@ -195,27 +195,23 @@ class StatsInsightsStore: QueryStore<InsightStoreState, InsightQuery> {
     }
 
     func persistToCoreData() {
-        guard
-            let siteID = SiteStatsInformation.sharedInstance.siteID,
-            let blog = Blog.lookup(withID: siteID, in: ContextManager.shared.mainContext) else {
-                return
+        guard let siteID = SiteStatsInformation.sharedInstance.siteID else {
+            return
         }
+        let cache = StatsDiskCache(siteID: siteID)
+        state.lastPostInsight.map(cache.storeInsights)
+        state.allTimeStats.map(cache.storeInsights)
+        state.annualAndMostPopularTime.map(cache.storeInsights)
+        state.dotComFollowers.map(cache.storeInsights)
+        state.emailFollowers.map(cache.storeInsights)
+        state.publicizeFollowers.map(cache.storeInsights)
+        state.topCommentsInsight.map(cache.storeInsights)
+        state.todaysStats.map(cache.storeInsights)
+        state.postingActivity.map(cache.storeInsights)
+        state.topTagsAndCategories.map(cache.storeInsights)
 
-        _ = state.lastPostInsight.flatMap { StatsRecord.record(from: $0, for: blog) }
-        _ = state.allTimeStats.flatMap { StatsRecord.record(from: $0, for: blog) }
-        _ = state.annualAndMostPopularTime.flatMap { StatsRecord.record(from: $0, for: blog) }
-        _ = state.dotComFollowers.flatMap { StatsRecord.record(from: $0, for: blog) }
-        _ = state.emailFollowers.flatMap { StatsRecord.record(from: $0, for: blog) }
-        _ = state.publicizeFollowers.flatMap { StatsRecord.record(from: $0, for: blog) }
-        _ = state.topCommentsInsight.flatMap { StatsRecord.record(from: $0, for: blog) }
-        _ = state.todaysStats.flatMap { StatsRecord.record(from: $0, for: blog) }
-        _ = state.postingActivity.flatMap { StatsRecord.record(from: $0, for: blog) }
-        _ = state.topTagsAndCategories.flatMap { StatsRecord.record(from: $0, for: blog) }
-
-        try? ContextManager.shared.mainContext.save()
         setLastRefreshDate(Date(), for: siteID)
     }
-
 }
 
 // MARK: - Private Methods
@@ -365,35 +361,30 @@ private extension StatsInsightsStore {
     }
 
     func loadFromCache() {
-        guard
-            let siteID = SiteStatsInformation.sharedInstance.siteID,
-            let blog = Blog.lookup(withID: siteID, in: ContextManager.shared.mainContext) else {
-                return
+        guard let siteID = SiteStatsInformation.sharedInstance.siteID else {
+            return
         }
-
+        let cache = StatsDiskCache(siteID: siteID)
         transaction { state in
-            state.lastPostInsight = StatsRecord.insight(for: blog, type: .lastPostInsight).flatMap { StatsLastPostInsight(statsRecordValues: $0.recordValues) }
+            state.lastPostInsight = cache.getCachedInsights()
             state.lastPostSummaryStatus = state.lastPostInsight == nil ? .error : .success
-            state.allTimeStats = StatsRecord.insight(for: blog, type: .allTimeStatsInsight).flatMap { StatsAllTimesInsight(statsRecordValues: $0.recordValues) }
+            state.allTimeStats = cache.getCachedInsights()
             state.allTimeStatus = state.allTimeStats == nil ? .error : .success
-            state.annualAndMostPopularTime = StatsRecord.insight(for: blog, type: .annualAndMostPopularTimes).flatMap { StatsAnnualAndMostPopularTimeInsight(statsRecordValues: $0.recordValues) }
+            state.annualAndMostPopularTime = cache.getCachedInsights()
             state.annualAndMostPopularTimeStatus = state.annualAndMostPopularTime != nil ? .error : .success
-            state.publicizeFollowers = StatsRecord.insight(for: blog, type: .publicizeConnection).flatMap { StatsPublicizeInsight(statsRecordValues: $0.recordValues) }
+            state.publicizeFollowers = cache.getCachedInsights()
             state.publicizeFollowersStatus = state.publicizeFollowers == nil ? .error : .success
-            state.todaysStats = StatsRecord.insight(for: blog, type: .today).flatMap { StatsTodayInsight(statsRecordValues: $0.recordValues) }
+            state.todaysStats = cache.getCachedInsights()
             state.todaysStatsStatus = state.todaysStats == nil ? .error : .success
-            state.postingActivity = StatsRecord.insight(for: blog, type: .streakInsight).flatMap { StatsPostingStreakInsight(statsRecordValues: $0.recordValues) }
+            state.postingActivity = cache.getCachedInsights()
             state.postingActivityStatus = state.postingActivity == nil ? .error : .success
-            state.topTagsAndCategories = StatsRecord.insight(for: blog, type: .tagsAndCategories).flatMap { StatsTagsAndCategoriesInsight(statsRecordValues: $0.recordValues) }
+            state.topTagsAndCategories = cache.getCachedInsights()
             state.tagsAndCategoriesStatus = state.topTagsAndCategories == nil ? .error : .success
-            state.topCommentsInsight = StatsRecord.insight(for: blog, type: .commentInsight).flatMap { StatsCommentsInsight(statsRecordValues: $0.recordValues) }
+            state.topCommentsInsight = cache.getCachedInsights()
             state.commentsInsightStatus = state.topCommentsInsight == nil ? .error : .success
-
-            let followersInsight = StatsRecord.insight(for: blog, type: .followers)
-
-            state.dotComFollowers = followersInsight.flatMap { StatsDotComFollowersInsight(statsRecordValues: $0.recordValues) }
+            state.dotComFollowers = cache.getCachedInsights()
             state.dotComFollowersStatus = state.dotComFollowers == nil ? .error : .success
-            state.emailFollowers = followersInsight.flatMap { StatsEmailFollowersInsight(statsRecordValues: $0.recordValues) }
+            state.emailFollowers = cache.getCachedInsights()
             state.emailFollowersStatus = state.emailFollowers == nil ? .error : .success
         }
 

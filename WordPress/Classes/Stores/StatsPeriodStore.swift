@@ -1459,22 +1459,36 @@ struct StatsDiskCache {
         self.siteID = siteID
     }
 
+    // MARK: - Stats
+
     func getCachedRecord<T: Decodable & StatsTimeIntervalData>(date: Date, period: StatsPeriodUnit) -> T? {
-        let key = StatsDiskCache.makeCacheKey(path: T.pathComponent, date: date, period: period, siteID: siteID)
+        let key = StatsDiskCache.makeCacheKey(type: T.self, date: date, period: period, siteID: siteID)
         return cache.getValue(T.self, forKey: key)
     }
 
     func storeRecord<T: Encodable & StatsTimeIntervalData>(_ record: T) {
-        let key = StatsDiskCache.makeCacheKey(for: record, siteID: siteID)
+        let key = StatsDiskCache.makeCacheKey(type: T.self, date: record.periodEndDate, period: record.period, siteID: siteID)
         cache.setValue(record, forKey: key)
     }
 
-    private static func makeCacheKey<T: StatsTimeIntervalData>(for record: T, siteID: NSNumber) -> String {
-        makeCacheKey(path: T.pathComponent, date: record.periodEndDate, period: record.period, siteID: siteID)
+    private static func makeCacheKey<T>(type: T.Type, date: Date, period: StatsPeriodUnit, siteID: NSNumber) -> String {
+        "stats/\(type)?date=\(cacheKeyDateFormatter.string(from: date)),period=\(period),siteID=\(siteID)"
     }
 
-    private static func makeCacheKey(path: String, date: Date, period: StatsPeriodUnit, siteID: NSNumber) -> String {
-        "stats/\(path)?date=\(cacheKeyDateFormatter.string(from: date)),period=\(period),siteID=\(siteID)"
+    // MARK: - Insights
+
+    func getCachedInsights<T: Decodable & StatsInsightData>() -> T? {
+        let key = StatsDiskCache.makeInsightCacheKey(type: T.self, siteID: siteID)
+        return cache.getValue(T.self, forKey: key)
+    }
+
+    func storeInsights<T: Encodable & StatsInsightData>(_ record: T) {
+        let key = StatsDiskCache.makeInsightCacheKey(type: T.self, siteID: siteID)
+        cache.setValue(record, forKey: key)
+    }
+
+    private static func makeInsightCacheKey<T>(type: T.Type, siteID: NSNumber) -> String {
+        "stats/insights/\(type)?siteID=\(siteID)"
     }
 }
 
